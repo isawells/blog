@@ -1,0 +1,26 @@
+---
+import Base from '../../layouts/Base.astro';
+import LibraryItem from '../../components/LibraryItem.astro';
+import { getPosts, tagCounts, url } from '../../lib/site';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  return tagCounts(posts).map(([tag]) => ({
+    params: { tag },
+    props: { posts: posts.filter((p) => p.data.tags.includes(tag)) },
+  }));
+}
+
+const { tag } = Astro.params;
+const { posts } = Astro.props;
+---
+<Base title={tag} description={`Posts tagged ${tag}`}>
+  <div class="wrap">
+    <span class="label">Tag</span>
+    <h1>{tag}</h1>
+    <p class="intro">{posts.length} {posts.length === 1 ? 'item' : 'items'} · <a href={url(`/?tags=${tag}`)}>Filter on the blog</a></p>
+    <ul class="library" style="margin-top: 1.5rem; border-top: 1px solid var(--rule)">
+      {posts.map((post) => <LibraryItem post={post} />)}
+    </ul>
+  </div>
+</Base>

@@ -1,0 +1,16 @@
+---
+import Base from '../layouts/Base.astro';
+import { SITE } from '../lib/site';
+---
+<Base title="About">
+  <div class="page-wrap">
+    <header class="post-header">
+      <span class="label">About</span>
+      <h1>{SITE.author}</h1>
+    </header>
+    <div class="prose">
+      <p>By day I work on infrastructure: pipelines, clusters and the occasional 3 a.m. page. The rest of the time I draw, write and build small software things for fun. This site is where all three live.</p>
+      <p><em>Add your links here.</em></p>
+    </div>
+  </div>
+</Base>

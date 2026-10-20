@@ -1,0 +1,70 @@
+---
+import { Image, getImage } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import { getAlbums, type Album } from '../../lib/photos';
+import { formatDate, url } from '../../lib/site';
+
+export function getStaticPaths() {
+  return getAlbums().map((album) => ({ params: { album: album.slug }, props: { album } }));
+}
+
+const { album } = Astro.props as { album: Album };
+// Large versions for the full-screen viewer.
+const full = await Promise.all(album.photos.map((p) => getImage({ src: p.image, width: 2000 })));
+---
+<Base title={album.title} description={album.description ?? `${album.photos.length} photos`}>
+  <div class="wrap">
+    <a class="label" href={url('/photos')} style="text-decoration:none">← Photos</a>
+    <h1 style="margin-top:0.75rem">{album.title}</h1>
+    <p class="intro">
+      {album.description && <>{album.description} </>}
+      <span class="byline">{album.photos.length} photos{album.date && <> · {formatDate(album.date)}</>}</span>
+    </p>
+
+    <div class="photo-grid">
+      {album.photos.map((p, i) => (
+        <figure>
+          <button type="button" data-full={full[i].src} aria-label={`View ${p.caption ?? p.file} full size`}>
+            <Image src={p.image} alt={p.caption ?? ''} width={700} />
+          </button>
+          {p.caption && <figcaption class="caption">{p.caption}</figcaption>}
+        </figure>
+      ))}
+    </div>
+  </div>
+
+  <dialog class="lightbox" aria-label="Photo viewer">
+    <img alt="" />
+    <div class="bar">
+      <button type="button" data-step="-1">Previous</button>
+      <span id="lb-caption"></span>
+      <button type="button" data-step="1">Next</button>
+      <button type="button" data-close>Close</button>
+    </div>
+  </dialog>
+
+  <script>
+    const dialog = document.querySelector<HTMLDialogElement>('.lightbox')!;
+    const img = dialog.querySelector('img')!;
+    const caption = document.getElementById('lb-caption')!;
+    const thumbs = [...document.querySelectorAll<HTMLButtonElement>('.photo-grid button')];
+    let index = 0;
+
+    function show(i: number) {
+      index = (i + thumbs.length) % thumbs.length;
+      const t = thumbs[index];
+      img.src = t.dataset.full!;
+      img.alt = t.querySelector('img')?.alt ?? '';
+      const cap = t.closest('figure')?.querySelector('figcaption')?.textContent;
+      caption.textContent = `${cap ? cap + ' · ' : ''}${index + 1} of ${thumbs.length}`;
+    }
+    thumbs.forEach((t, i) => t.addEventListener('click', () => { show(i); dialog.showModal(); }));
+    dialog.querySelectorAll<HTMLButtonElement>('[data-step]').forEach((b) =>
+      b.addEventListener('click', () => show(index + Number(b.dataset.step))));
+    dialog.querySelector('[data-close]')!.addEventListener('click', () => dialog.close());
+    dialog.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') show(index + 1);
+      if (e.key === 'ArrowLeft') show(index - 1);
+    });
+  </script>
+</Base>

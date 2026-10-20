@@ -1,0 +1,32 @@
+---
+import { Image } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import { getAlbums } from '../../lib/photos';
+import { formatDate, url } from '../../lib/site';
+
+const albums = getAlbums();
+---
+<Base title="Photos" description="Photo albums.">
+  <div class="wrap">
+    <h1>Photos</h1>
+    <p class="intro">Albums, newest first.</p>
+    {albums.length > 0 ? (
+      <div class="albums">
+        {albums.map((a) => (
+          <div class="album">
+            <div class="thumb"><Image src={a.cover.image} alt="" width={600} /></div>
+            <div>
+              <h2><a href={url(`/photos/${a.slug}`)}>{a.title}</a></h2>
+              <div class="byline">
+                {a.photos.length} {a.photos.length === 1 ? 'photo' : 'photos'}
+                {a.date && <><span class="sep">·</span>{formatDate(a.date)}</>}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    ) : (
+      <p class="empty">No albums yet. Add a folder of images to <code>src/photos/</code>.</p>
+    )}
+  </div>
+</Base>

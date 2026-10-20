@@ -1,0 +1,72 @@
+---
+import { Image } from 'astro:assets';
+import Base from './Base.astro';
+import { CATEGORY_META, formatDate, readingMinutes, url, type Post } from '../lib/site';
+
+interface Props { post: Post }
+const { post } = Astro.props;
+const { title, description, date, category, tags, cover, coverAlt, repo, stack } = post.data;
+const minutes = readingMinutes(post);
+---
+<Base title={title} description={description}>
+  <article class="page-wrap" id="reading" data-minutes={minutes}>
+    <header class="post-header">
+      <span class="label">{CATEGORY_META[category].label} · {formatDate(date)}</span>
+      <h1>{title}</h1>
+      <p class="lede">{description}</p>
+      {tags.length > 0 && (
+        <div class="tags-inline">{tags.map((t) => <a href={url(`/tags/${t}`)}>{t}</a>)}</div>
+      )}
+    </header>
+
+    {(repo || stack.length > 0) && (
+      <div class="project-box">
+        {stack.length > 0 && <span>Built with {stack.join(', ')}</span>}
+        {repo && <a href={repo}>View the code</a>}
+      </div>
+    )}
+
+    {cover && (
+      <figure class="post-cover">
+        <Image src={cover} alt={coverAlt ?? ''} width={1200} loading="eager" />
+      </figure>
+    )}
+
+    <div class="prose">
+      <slot />
+    </div>
+
+    <footer class="post-end">
+      <span class="label">End of post</span>
+      <a href={url('/')}>Back to the blog</a>
+    </footer>
+  </article>
+
+  <div class="progress" aria-hidden="true">
+    <span class="bar"></span>
+    <span id="left">{minutes} min left in post</span>
+    <span id="pct">0%</span>
+  </div>
+
+  <script>
+    // Kindle-style "x min left · y%" line, driven by how far through the article you are.
+    const article = document.getElementById('reading')!;
+    const left = document.getElementById('left')!;
+    const pct = document.getElementById('pct')!;
+    const bar = document.querySelector<HTMLElement>('.progress .bar')!;
+    const total = Number(article.dataset.minutes);
+
+    function update() {
+      const rect = article.getBoundingClientRect();
+      const scrollable = rect.height - innerHeight;
+      const p = scrollable <= 0 ? 1 : Math.min(1, Math.max(0, -rect.top / scrollable));
+      const remaining = Math.ceil(total * (1 - p));
+      left.textContent = remaining > 0 ? `${remaining} min left in post` : 'Finished';
+      pct.textContent = `${Math.round(p * 100)}%`;
+      bar.style.width = `${p * 100}%`;
+    }
+    addEventListener('scroll', update, { passive: true });
+    addEventListener('resize', update);
+    update();
+  </script>
+</Base>

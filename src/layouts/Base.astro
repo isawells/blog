@@ -1,0 +1,118 @@
+---
+import '@fontsource-variable/literata/opsz.css';
+import '@fontsource-variable/literata/opsz-italic.css';
+import '../styles/global.css';
+import { SITE, url } from '../lib/site';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+const { title, description = SITE.tagline } = Astro.props;
+const pageTitle = title ? `${title} · ${SITE.title}` : SITE.title;
+
+const nav = [
+  { href: url('/'), label: 'Blog', match: (p: string) => p === url('/').replace(/\/$/, '') || p.startsWith(url('/blog')) || p.startsWith(url('/tags')) },
+  { href: url('/photos'), label: 'Photos', match: (p: string) => p.startsWith(url('/photos')) },
+  { href: url('/about'), label: 'About', match: (p: string) => p.startsWith(url('/about')) },
+];
+const here = Astro.url.pathname.replace(/\/$/, '');
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <link rel="icon" type="image/svg+xml" href={url('/favicon.svg')} />
+    <link rel="alternate" type="application/rss+xml" title={SITE.title} href={url('/rss.xml')} />
+    <meta name="generator" content={Astro.generator} />
+    <script is:inline>
+      // Apply saved display settings before paint to avoid a flash.
+      try {
+        const s = JSON.parse(localStorage.getItem('display') || '{}');
+        if (s.theme) document.documentElement.dataset.theme = s.theme;
+        if (s.size) document.documentElement.dataset.size = s.size;
+      } catch {}
+    </script>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="wrap">
+        <a class="brand" href={url('/')}>{SITE.title}</a>
+        <nav class="nav" aria-label="Main">
+          {nav.map((n) => <a href={n.href} aria-current={n.match(here) ? 'page' : undefined}>{n.label}</a>)}
+        </nav>
+        <div class="aa">
+          <button class="aa-button" type="button" aria-expanded="false" aria-controls="aa-panel" aria-label="Display settings">Aa</button>
+          <div class="aa-panel" id="aa-panel" hidden>
+            <div>
+              <span class="label">Theme</span>
+              <div class="opts" data-setting="theme">
+                <button type="button" data-value="">Paper</button>
+                <button type="button" data-value="dark">Dark</button>
+              </div>
+            </div>
+            <div>
+              <span class="label">Text size</span>
+              <div class="opts" data-setting="size">
+                <button type="button" data-value="s" style="font-size:0.75rem">A</button>
+                <button type="button" data-value="" style="font-size:0.9rem">A</button>
+                <button type="button" data-value="l" style="font-size:1.05rem">A</button>
+                <button type="button" data-value="xl" style="font-size:1.2rem">A</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <slot />
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap label">
+        <span>© {new Date().getFullYear()} {SITE.author}</span>
+        <a href={url('/rss.xml')}>RSS</a>
+      </div>
+    </footer>
+
+    <script>
+      const root = document.documentElement;
+      const button = document.querySelector<HTMLButtonElement>('.aa-button')!;
+      const panel = document.getElementById('aa-panel')!;
+      const groups = [...panel.querySelectorAll<HTMLElement>('[data-setting]')];
+
+      const read = (): Record<string, string> => {
+        try { return JSON.parse(localStorage.getItem('display') || '{}'); } catch { return {}; }
+      };
+      function sync() {
+        for (const g of groups) {
+          const current = root.dataset[g.dataset.setting!] ?? '';
+          g.querySelectorAll<HTMLButtonElement>('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.value === current)));
+        }
+      }
+      for (const g of groups) {
+        g.addEventListener('click', (e) => {
+          const b = (e.target as HTMLElement).closest('button');
+          if (!b) return;
+          const key = g.dataset.setting!;
+          if (b.dataset.value) root.dataset[key] = b.dataset.value; else delete root.dataset[key];
+          const s = read();
+          s[key] = b.dataset.value ?? '';
+          try { localStorage.setItem('display', JSON.stringify(s)); } catch {}
+          sync();
+        });
+      }
+      const setOpen = (open: boolean) => { panel.hidden = !open; button.setAttribute('aria-expanded', String(open)); };
+      button.addEventListener('click', () => setOpen(panel.hidden === true));
+      document.addEventListener('click', (e) => { if (!(e.target as HTMLElement).closest('.aa')) setOpen(false); });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false); });
+      sync();
+    </script>
+  </body>
+</html>

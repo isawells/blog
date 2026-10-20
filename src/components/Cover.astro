@@ -1,0 +1,19 @@
+---
+// A post's cover image, or a generated "book cover" with the title set in type,
+// like the covers Kindle makes for personal documents.
+import { Image } from 'astro:assets';
+import { SITE, type Post } from '../lib/site';
+
+interface Props { post: Post; width?: number }
+const { post, width = 300 } = Astro.props;
+const { cover, coverAlt, title } = post.data;
+---
+{cover ? (
+  <div class="cover"><Image src={cover} alt={coverAlt ?? ''} width={width} /></div>
+) : (
+  <div class="cover generated" aria-hidden="true">
+    <span class="t">{title}</span>
+    <span class="rule"></span>
+    <span class="a">{SITE.author}</span>
+  </div>
+)}

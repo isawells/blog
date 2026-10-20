@@ -1,0 +1,123 @@
+---
+// The Kindle-style library: category tabs, tag filter and a list/grid toggle.
+// The tag line only shows tags used in the selected tab.
+// Filter state lives in the URL (?category=reviews&tags=books) so filtered views are shareable.
+// Without JS every post is listed and the tags link to their static /tags/<tag> pages.
+import LibraryItem from './LibraryItem.astro';
+import { CATEGORIES } from '../content.config';
+import { CATEGORY_META, tagCounts, url, type Post } from '../lib/site';
+
+interface Props { posts: Post[] }
+const { posts } = Astro.props;
+// Category tabs (All / Reviews / Tech / Hobbies). Off until there are enough posts; set to true to bring them back.
+const SHOW_TABS = false;
+const tags = tagCounts(posts);
+// Which categories each tag appears in, so the tag line can follow the selected tab.
+const tagCats = (t: string) => [...new Set(posts.filter((p) => p.data.tags.includes(t)).map((p) => p.data.category))].join(' ');
+---
+<div class="toolbar">
+  {SHOW_TABS ? (
+    <div class="tabs" role="group" aria-label="Category">
+      <button type="button" data-cat="" aria-pressed="true">All</button>
+      {CATEGORIES.map((c) => <button type="button" data-cat={c} aria-pressed="false">{CATEGORY_META[c].label}</button>)}
+    </div>
+  ) : <span class="status" id="status" aria-live="polite"></span>}
+  <div class="view-toggle" role="group" aria-label="View">
+    <button type="button" data-view="list" aria-pressed="true">List</button>
+    <button type="button" data-view="grid" aria-pressed="false">Grid</button>
+  </div>
+</div>
+
+{tags.length > 0 && (
+  <div class="tag-line" id="tag-line">
+    <span class="label">Tags</span>
+    {tags.map(([t]) => <a href={url(`/tags/${t}`)} data-tag={t} data-cats={tagCats(t)}>{t}</a>)}
+    <button type="button" class="clear" hidden>Clear</button>
+  </div>
+)}
+
+{SHOW_TABS && <p class="status" id="status" aria-live="polite"></p>}
+
+<ul class="library" id="library">
+  {posts.map((post) => <LibraryItem post={post} />)}
+</ul>
+<p class="empty" id="empty" hidden>Nothing matches those filters.</p>
+
+<script>
+  const items = [...document.querySelectorAll<HTMLElement>('#library .item')];
+  const list = document.getElementById('library')!;
+  const status = document.getElementById('status')!;
+  const empty = document.getElementById('empty')!;
+  const catBtns = [...document.querySelectorAll<HTMLButtonElement>('.tabs [data-cat]')];
+  const viewBtns = [...document.querySelectorAll<HTMLButtonElement>('[data-view]')];
+  const tagLine = document.getElementById('tag-line');
+  const clear = tagLine?.querySelector<HTMLButtonElement>('.clear');
+
+  // Upgrade tag links into toggle buttons now that JS is available.
+  const tagBtns = [...(tagLine?.querySelectorAll<HTMLAnchorElement>('a[data-tag]') ?? [])].map((a) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.dataset.tag = a.dataset.tag;
+    b.dataset.cats = a.dataset.cats;
+    b.textContent = a.textContent;
+    a.replaceWith(b);
+    return b;
+  });
+
+  const params = new URLSearchParams(location.search);
+  // Ignore ?category= when the tabs are hidden, so nothing is filtered invisibly.
+  let category = catBtns.length ? params.get('category') ?? '' : '';
+  const selected = new Set((params.get('tags') ?? '').split(',').filter(Boolean));
+  let view = 'list';
+  try { view = localStorage.getItem('library-view') ?? 'list'; } catch {}
+
+  const inCategory = (b: HTMLElement) => !category || (b.dataset.cats ?? '').split(' ').includes(category);
+
+  function render() {
+    let shown = 0;
+    for (const item of items) {
+      const itemTags = (item.dataset.tags ?? '').split(' ');
+      // An item matches if it is in the category and has ALL selected tags.
+      const ok = (!category || item.dataset.category === category) && [...selected].every((t) => itemTags.includes(t));
+      item.hidden = !ok;
+      if (ok) shown++;
+    }
+    catBtns.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.cat === category)));
+    tagBtns.forEach((b) => {
+      b.hidden = !inCategory(b);
+      b.setAttribute('aria-pressed', String(selected.has(b.dataset.tag!)));
+    });
+    if (tagLine) tagLine.hidden = tagBtns.every((b) => b.hidden);
+    viewBtns.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.view === view)));
+    list.classList.toggle('grid', view === 'grid');
+    status.textContent = `${shown} ${shown === 1 ? 'item' : 'items'}`;
+    empty.hidden = shown > 0;
+    if (clear) clear.hidden = !category && selected.size === 0;
+
+    const p = new URLSearchParams();
+    if (category) p.set('category', category);
+    if (selected.size) p.set('tags', [...selected].join(','));
+    const qs = p.toString();
+    history.replaceState(null, '', qs ? `?${qs}` : location.pathname);
+  }
+
+  catBtns.forEach((b) => b.addEventListener('click', () => {
+    category = b.dataset.cat ?? '';
+    // Drop selected tags that don't exist in the new tab.
+    for (const t of tagBtns) if (!inCategory(t)) selected.delete(t.dataset.tag!);
+    render();
+  }));
+  tagBtns.forEach((b) => b.addEventListener('click', () => {
+    const t = b.dataset.tag!;
+    selected.has(t) ? selected.delete(t) : selected.add(t);
+    render();
+  }));
+  viewBtns.forEach((b) => b.addEventListener('click', () => {
+    view = b.dataset.view!;
+    try { localStorage.setItem('library-view', view); } catch {}
+    render();
+  }));
+  clear?.addEventListener('click', () => { category = ''; selected.clear(); render(); });
+
+  render();
+</script>
