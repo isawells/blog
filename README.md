@@ -39,7 +39,7 @@ stack: [go, terraform]
 Markdown goes here.
 ```
 
-- **URL:** the folder name becomes the URL, e.g. `/blog/my-new-post`.
+- **URL:** the folder name becomes the URL, e.g. `/post/my-new-post`.
 - **Tags:** each tag gets its own page at `/tags/<tag>` and shows up in the tag filter on the blog page.
 - **No cover?** The blog page generates a Kindle-style cover with your title set in type.
 - **Art gallery:** wrap images in a gallery div, with blank lines inside it:
@@ -89,7 +89,7 @@ src/photos/2026-10-lisbon/
 | `src/lib/site.ts` | Site title, your name, category labels |
 | `src/lib/photos.ts` | How photo folders become albums |
 | `src/styles/global.css` | All styling. Paper/ink colours are the CSS variables at the top |
-| `src/pages/` | Routes: blog (home), `/blog/*` posts, `/photos`, `/tags/*`, `/about`, RSS |
+| `src/pages/` | Routes: blog (home), `/post/*` posts, `/photos`, `/tags/*`, `/about`, RSS |
 | `src/components/Library.astro` | Blog list/grid with category tabs and tag filter |
 
 ## Deploying

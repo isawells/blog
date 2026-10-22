@@ -9,7 +9,7 @@ const { title, description, category, tags, date, draft } = post.data;
 <li class="item" data-category={category} data-tags={tags.join(' ')}>
   <Cover post={post} />
   <div>
-    <h2><a href={url(`/blog/${post.id}`)}>{title}</a></h2>
+    <h2><a href={url(`/post/${post.id}`)}>{title}</a></h2>
     <div class="byline">
       {CATEGORY_META[category].label}<span class="sep">·</span>{readingMinutes(post)} min read<span class="sep">·</span><time datetime={date.toISOString()}>{formatDate(date)}</time>
       {draft && <><span class="sep">·</span>Draft</>}

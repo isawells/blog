@@ -1,5 +1,5 @@
 ---
-title: "Everything I know about pipelines (CI/CD): GitLab Edition"
+title: "Everything I know about GitLab CI/CD"
 date: 2026-10-21
 category: tech
 tags: [ci-cd, gitlab, devops, yaml]
