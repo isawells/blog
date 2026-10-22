@@ -12,7 +12,7 @@ const { title, description = SITE.tagline } = Astro.props;
 const pageTitle = title ? `${title} · ${SITE.title}` : SITE.title;
 
 const nav = [
-  { href: url('/'), label: 'Blog', match: (p: string) => p === url('/').replace(/\/$/, '') || p.startsWith(url('/blog')) || p.startsWith(url('/tags')) },
+  { href: url('/'), label: 'Blog', match: (p: string) => p === url('/').replace(/\/$/, '') || p.startsWith(url('/post')) || p.startsWith(url('/tags')) },
   { href: url('/photos'), label: 'Photos', match: (p: string) => p.startsWith(url('/photos')) },
   { href: url('/about'), label: 'About', match: (p: string) => p.startsWith(url('/about')) },
 ];

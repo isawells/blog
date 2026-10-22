@@ -116,7 +116,7 @@ main { flex: 1; padding-block: 2.5rem 5rem; }
 
 .toolbar {
   display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
-  border-block: 1px solid var(--rule); margin: 2rem 0 0.5rem; padding-block: 0.25rem;
+  border-block: 1px solid var(--rule); margin: 0 0 0.5rem; padding-block: 0.25rem;
 }
 .tabs { display: flex; gap: 1.4rem; font: 0.9rem/1 var(--font-ui); overflow-x: auto; }
 .tabs button, .view-toggle button {
