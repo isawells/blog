@@ -4,6 +4,8 @@ date: 2026-10-28
 category: hobbies
 tags: [diy, pergola, patio, backyard]
 description: "How I built a patio and a cedar pergola in my backyard in the middle of a Texas summer, and what not to do if you try it."
+cover: ./cover.png
+coverAlt: "Illustration of a wooden pergola over a diamond-pattern paver patio, with a pale sun behind it"
 ---
 
 How in the world did I decide it was a good idea to DIY a pergola in my backyard? I’ll tell you how: Instagram Reels. Reels of people (probably professionals) paving patios and raising entire structures, all squeezed into a sub-minute montage. An hour of scrolling later, I had a full plan, an itemized supply list, and zero doubt that I could build a patio *and* a pergola myself. Then I started digging…
@@ -41,7 +43,7 @@ After I determined the size of the patio, I was able to create my sacred itemize
 
 </div>
 
-All in, that comes to roughly $1,900–$2,000.
+All in, that comes to roughly $2,000.
 
 ## Map out the patio
 

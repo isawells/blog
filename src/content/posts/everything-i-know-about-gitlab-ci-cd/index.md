@@ -4,6 +4,8 @@ date: 2026-10-21
 category: tech
 tags: [ci-cd, gitlab, devops, yaml]
 description: "Opinionated lessons from years of building reusable GitLab CI/CD templates for teams of any size."
+cover: ./cover.png
+coverAlt: "Illustration of a CI/CD pipeline with build, test and deploy stages"
 ---
 
 Over the years, I have dedicated most of my time to perfecting the art of configuring reusable CI/CD configs for the masses. I have learned a lot along the way. That includes everything from optimizing the pipeline itself to figuring out the cleanest way to package these configs to reduce maintenance. I will share with you everything I believe you need to know to be successful in building and supporting CI/CD configs, whether you're building them just for your team or for thousands of engineers. I've learned it can be a good thing to be opinionated, especially if you are going to be maintaining these CI/CD configs for thousands of engineers.
