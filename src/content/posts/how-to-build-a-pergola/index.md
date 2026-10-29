@@ -6,11 +6,11 @@ tags: [diy, pergola, patio, backyard]
 description: "How I built a patio and a cedar pergola in my backyard in the middle of a Texas summer, and what not to do if you try it."
 ---
 
-How in the world did I think it was a good idea to DIY a pergola in my backyard? I’ll tell you how… Instagram reels of people (probably professionals) paving patios and building entire structures, montaged in under a minute. After about an hour of watching reels, I had an entire plan with an itemized list of supplies and zero doubts that I was going to build a patio and a pergola in my backyard. Then I started digging…
+How in the world did I decide it was a good idea to DIY a pergola in my backyard? I’ll tell you how: Instagram Reels. Reels of people (probably professionals) paving patios and raising entire structures, all squeezed into a sub-minute montage. An hour of scrolling later, I had a full plan, an itemized supply list, and zero doubt that I could build a patio *and* a pergola myself. Then I started digging…
 
-Keep in mind, throughout this entire experience, it was smack in the middle of summer in Texas. So every day was a blistering 100 degrees by 10 a.m. Did that fact stop me? No, no, it did not. So today I am going to walk you through how I built a pergola so you can know what not to do if you are crazy enough to do the same.
+Keep in mind that this whole project took place smack in the middle of a Texas summer, when it hit a blistering 100 degrees by 10 a.m. every day. Did that stop me? No. No, it did not. So today I’m walking you through how I built my pergola, so you’ll know what not to do if you’re crazy enough to try it yourself.
 
-**Step 1:** Don’t decide to build a pergola in the middle of the summer in Texas.  
+**Step 1:** Don’t decide to build a pergola in the middle of a Texas summer.  
 **Step 2:** Dig, dig, dig.
 
 ## Decide on the size
