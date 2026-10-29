@@ -1,11 +1,10 @@
 ---
-import { Image } from 'astro:assets';
 import Base from './Base.astro';
 import { CATEGORY_META, formatDate, readingMinutes, url, type Post } from '../lib/site';
 
 interface Props { post: Post }
 const { post } = Astro.props;
-const { title, description, date, category, tags, cover, coverAlt, repo, stack } = post.data;
+const { title, description, date, category, tags, repo, stack } = post.data;
 const minutes = readingMinutes(post);
 ---
 <Base title={title} description={description}>
@@ -24,12 +23,6 @@ const minutes = readingMinutes(post);
         {stack.length > 0 && <span>Built with {stack.join(', ')}</span>}
         {repo && <a href={repo}>View the code</a>}
       </div>
-    )}
-
-    {cover && (
-      <figure class="post-cover">
-        <Image src={cover} alt={coverAlt ?? ''} width={1200} loading="eager" />
-      </figure>
     )}
 
     <div class="prose">
