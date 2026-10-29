@@ -49,7 +49,7 @@ All in, that comes to roughly $2,000.
 
 Drawing is going to be your best friend when it comes to deciding where to put your patio. You can redo a drawing a million times, but you can’t move a patio. Measure the space: your yard, the fence line, the house, the distance from one tree to another. Give yourself some kind of measurement to work from in your drawing, ideally both length and width.
 
-Next, I spray-painted an outline of the patio on the grass. This sounds easy. It’s not. That’s why the drawings are your practice round. On paper, I thought I knew exactly where my pergola would go, but once I got out there, the position of my house’s window sent me in a completely different direction. I ended up respraying the outline three times. Ideally, you won’t change your mind, but if you do, that’s the beauty of spray paint: like the drawings, it isn’t permanent.
+Next, I spray-painted an outline of the patio on the grass. This sounds easy. It’s not. That’s why the drawings are your practice round. On paper, I thought I knew exactly where my pergola would go, but once I got out there, the position of my house’s window sent me in a completely different direction. I ended up respraying the outline three times. The trick here is to not change your mind. But similar to the drawings, the spray paint is meant to be impermanent.
 
 ## Till and dig
 
