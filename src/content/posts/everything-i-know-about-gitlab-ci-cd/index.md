@@ -8,15 +8,15 @@ cover: ./cover.png
 coverAlt: "Illustration of a CI/CD pipeline with build, test and deploy stages"
 ---
 
-Over the years, I have dedicated most of my time to perfecting the art of configuring reusable CI/CD configs for the masses. I have learned a lot along the way. That includes everything from optimizing the pipeline itself to figuring out the cleanest way to package these configs to reduce maintenance. I will share with you everything I believe you need to know to be successful in building and supporting CI/CD configs, whether you're building them just for your team or for thousands of engineers. I've learned it can be a good thing to be opinionated, especially if you are going to be maintaining these CI/CD configs for thousands of engineers.
+Over the years, I've spent most of my time perfecting the art of building reusable CI/CD configs for the masses, and I've learned a lot along the way: everything from optimizing the pipeline itself to finding the cleanest way to package configs so they're easy to maintain. In this post, I'll share everything I believe you need to know to build and support CI/CD configs successfully, whether they're for your own team or for thousands of engineers. One lesson up front: it pays to be opinionated, especially when thousands of engineers depend on what you maintain.
 
 ## The Basics: Organizational Structures
 
-It's important to label the types of "templates" and when each one should be used. Otherwise, you end up with spaghetti code. Some of these organizational structures aren't documented on any vendor site. They're opinions I've come to depend on.
+It's important to name the types of "templates" you have and define when to use each one. Otherwise, you end up with spaghetti code. Some of these organizational structures aren't documented on any vendor site; they're opinions I've come to depend on.
 
 ### Anchors and Hidden Jobs
 
-Anchors look just like GitLab's "Hidden Jobs," but Hidden Jobs use the `extends` or `!reference` keywords when they are used in a job. In this section I will use the word anchors interchangeably with hidden jobs.
+Anchors look just like GitLab's "hidden jobs," except that a job pulls in a hidden job with the `extends` or `!reference` keyword instead of YAML anchor syntax. In this section, I use "anchors" and "hidden jobs" interchangeably.
 
 ```yaml
 # A YAML anchor: only works inside the file where it's defined
@@ -44,9 +44,9 @@ gradle-unit-test:
     - gradle test
 ```
 
-These are your jobs' shared configs, and they let you follow the DRY (don't repeat yourself) methodology. Don't go crazy and start creating anchors for things just 'cause you think it looks pretty. You should only have an anchor if more than one job needs the same config. Otherwise, adding anchors unnecessarily creates strain on job/pipeline startup and makes the merged YAML a nightmare to parse through.
+Anchors and hidden jobs hold your jobs' shared config and let you follow DRY (don't repeat yourself). But don't go crazy creating anchors just 'cause you think they look pretty. Only create one when more than one job needs the same config. Unnecessary anchors slow down job and pipeline startup and make the merged YAML a nightmare to read.
 
-Never encourage users to override anchors. Let me say it again. Never encourage users to override anchors. Anchors are meant to be used by config maintainers to optimize the code. Maintainers should be able to delete, rename, or completely change the contents of the anchors as they please. Anything a maintainer adds to an anchor is deep merged in GitLab, so you end up with a hodgepodge of both the maintainer's and the user's configs. Any override of a hidden job may impact multiple jobs in the pipeline, and the user may not be aware of them. It's a nightmare, and one I am never going to support. If I see someone overriding anchors from a CI/CD template they are using, my first suggestion is going to be to delete everything.
+Never encourage users to override anchors. Let me say it again: never encourage users to override anchors. Anchors exist so config maintainers can optimize their code, and maintainers should be free to delete, rename, or completely change them. When a user overrides one, GitLab deep merges the user's version with the maintainer's, so you end up with a hodgepodge of both. And because many jobs can extend the same hidden job, a single override can change jobs across the pipeline that the user doesn't even know about. It's a nightmare, and it's one I will never support. If I see someone overriding anchors from a CI/CD template, my first suggestion is going to be to delete all of it.
 
 ```yaml
 # .gitlab-ci.yml: please don't do this
@@ -62,7 +62,7 @@ include:
 
 ### Jobs
 
-Jobs are where your units of work execute. A CI/CD pipeline is composed of jobs. Each job accomplishes a single task in support of the development life cycle.
+Jobs are where your units of work run. A CI/CD pipeline is made up of jobs, and each job accomplishes a single task in support of the development life cycle.
 
 ```yaml
 gradle-unit-test:
@@ -72,13 +72,13 @@ gradle-unit-test:
     - gradle test
 ```
 
-Similar to anchors, I would not recommend that users override a job, but I stress it a lot less. Job names should be more permanent. Maintainers (in my experience) aren't going to delete or rename a job without labeling it as a breaking change.
+As with anchors, I don't recommend that users override jobs, though I stress it a lot less. Job names are more permanent: in my experience, maintainers don't delete or rename a job without labeling it a breaking change.
 
 [GitLab docs: Jobs](https://docs.gitlab.com/ci/jobs/)
 
 ### Task Components
 
-Task components are templates or YAML files that contain one or more jobs in support of a specific tool. For example, a Gradle task component may have jobs for build, unit test, and integration test. All of those jobs would go under a single "task component" because they support the same tool. This organizational structure is helpful because each of those jobs will probably use the same image, setup scripts, or variables. Users who need Gradle will also likely need all three of those jobs in their pipeline.
+Task components are templates (YAML files) that contain one or more jobs supporting a specific tool. For example, a Gradle task component might have jobs for build, unit test, and integration test. All of those jobs belong in a single task component because they support the same tool. This structure helps because those jobs will probably share the same image, setup scripts, and variables, and users who need Gradle will likely need all three jobs in their pipeline.
 
 ```yaml
 # templates/gradle/template.yml
@@ -124,7 +124,7 @@ gradle-integration-test:
     - gradle integrationTest
 ```
 
-Task components should be able to be included independently of other task components. This lets users with lightweight projects add just a single task component for their unique use case. They don't have to take on the bulk of a pipeline component (which we will get into in a sec).
+Each task component should be includable on its own, independent of other task components. That way, users with lightweight projects can add just the one task component they need without taking on the bulk of a pipeline component (more on those in a sec).
 
 ```yaml
 # .gitlab-ci.yml for a small project
@@ -132,13 +132,13 @@ include:
   - component: $CI_SERVER_FQDN/my-org/gradle/gradle@1.4.2
 ```
 
-Task components should not have too many nested includes. An extra include under a task component can help support the DRY method. But with too many nested includes, you are likely to hit the 150 include limit over time. It also makes the merged YAML a nightmare to read and makes tracing down configuration difficult.
+Keep nested includes in task components to a minimum. An extra include can help keep things DRY, but with too many, you're likely to hit GitLab's 150-include limit over time. They also make the merged YAML a nightmare to read and make it hard to trace where a config comes from.
 
 ### Pipeline Components
 
-Pipeline components are templates or YAML files made up of more than one task component. They contain all of the tasks required to support a specific stack, from building in the dev environment all the way to production deploy. The pipeline component wires up all the required needs or dependencies across jobs.
+Pipeline components are templates made up of more than one task component. They contain every task needed to support a specific stack, from building in the dev environment all the way through production deploy, and they wire up all the needs and dependencies between jobs.
 
-Task components that make up a pipeline component should always be pinned to the full semantic version. Otherwise, you get into a maintenance nightmare. The same goes for users. If users are combining more than one task component and creating dependencies between them, those task components must be pinned to immutable versions. This will save both the user and the maintainer headaches when a maintainer is iterating on a task component. It lets pipeline maintainers and users test out the change when they are ready to use it. For a user, this is especially important on release nights, when you expect your pipeline to work before a production deploy.
+The task components inside a pipeline component should always be pinned to a full semantic version. Otherwise, you're in for a maintenance nightmare. The same goes for users: if they combine multiple task components and create dependencies between them, those components must be pinned to immutable versions. Pinning saves users and maintainers headaches while a maintainer iterates on a task component, because everyone downstream can test the change when they're ready to adopt it. For users, this matters most on release nights, when the pipeline just needs to work before a production deploy.
 
 ```yaml
 include:
@@ -147,7 +147,7 @@ include:
   - component: $CI_SERVER_FQDN/my-org/gradle/gradle@~latest  # please no
 ```
 
-Pipeline components will default certain jobs to off, set default variables, or set default spec inputs for the user. When defaulting a task component to off, it is important to use rules on the include instead of variables within the job's rules. This makes it easier for GitLab to spin up the pipeline, since it doesn't have to read in all the extra YAML from that task component.
+Pipeline components often turn certain jobs off by default, set default variables, or set default spec inputs for the user. When you turn a task component off by default, put rules on the include rather than using variables in the job's rules. That way, GitLab doesn't have to process all of that task component's YAML, so the pipeline spins up faster.
 
 ```yaml
 # Avoid: the job's YAML still gets processed, then skipped
@@ -156,7 +156,7 @@ sonar-scan:
     - if: $SONAR_ENABLED == "true"
 ```
 
-All task components should set needs as spec inputs in their jobs. This lets pipeline maintainers safely configure dependencies across jobs without directly overriding jobs or resorting to the forsaken anchor override.
+Every task component should expose its jobs' needs as spec inputs. That lets pipeline maintainers safely configure dependencies across jobs without overriding jobs directly or resorting to the forsaken anchor override.
 
 Here is what that looks like in a pipeline component:
 
@@ -202,23 +202,23 @@ include:
       enable_sonar: true
 ```
 
-Both task and pipeline components are organizational structures I have come up with underneath GitLab's ["CI/CD Component"](https://docs.gitlab.com/ci/components/).
+Task and pipeline components are both organizational structures I've built on top of GitLab's [CI/CD components](https://docs.gitlab.com/ci/components/).
 
 ## Next Up: Variables vs. Spec Inputs
 
-I remember when GitLab first came out with spec inputs, and it completely blew my mind. It took me months to figure out how I might use them, and a few months more to come up with solid standards for them across jobs, tasks, and pipeline components. To this day, I may not have it perfect, but I'll share my opinions nonetheless.
+I remember when GitLab first released spec inputs. They completely blew my mind. It took me months to figure out how I might use them, and a few more months to come up with solid standards for them across jobs, task components, and pipeline components. I still may not have it perfect, but I'll share my opinions anyway.
 
 ### Variables
 
-Oh, variables. Here is a little haiku for how I feel about CI/CD variables:
+Oh, variables. Here's a little haiku about how I feel about CI/CD variables:
 
 > You set them here now\
 > Someone sets them elsewhere now\
 > Nothing works but why?
 
-It's horrible. Both my haiku and what will happen if you don't get your variable definitions under control.
+It's horrible. Both my haiku and what happens if you don't get your variable definitions under control.
 
-In short, never use global variables. This goes double for a pipeline component, unless you want the variable to affect the behavior of multiple jobs across the pipeline. Even then, I would look for any other solution before resorting to a global variable. It's messy and confusing, and it can create a maintenance nightmare later on. You can't easily change it without impacting multiple CI/CD projects. In a perfect world, my users have no variables defined in their .gitlab-ci.yml.
+In short, avoid global variables, especially in a pipeline component. The only exception is when you actually want a variable to change the behavior of multiple jobs across the pipeline, and even then, I'd try every other option first. Global variables are messy and confusing, and they can become a maintenance nightmare later: you can't easily change one without affecting multiple CI/CD projects. In a perfect world, my users have no variables defined in their `.gitlab-ci.yml` at all.
 
 ```yaml
 # Avoid: a top-level variable in a component leaks into every job in the user's pipeline
@@ -233,13 +233,13 @@ variables:
 
 ### Spec Inputs
 
-Spec inputs are beautiful. They let you scope inputs to a single template file. You explicitly grant people access to modify a certain config by exposing it as a spec input. You can then pass that input through as many levels as you want, depending on how you want to scope it. (Notice how `java_version` flows from the pipeline component down into the Gradle task component in the example above.)
+Spec inputs are beautiful. They're scoped to a single template file, and exposing a config as a spec input explicitly grants people permission to change it. You can then pass that input down through as many levels as you want, depending on how widely you want to scope it. (Notice how `java_version` flows from the pipeline component down into the Gradle task component in the example above.)
 
-You may be wondering, why don't I make everything a spec input in my task component?
+You may be wondering: why not make everything in my task component a spec input?
 
-And this is how you end up with 700 lines of spec before your actual CI/CD configs start.
+Because that's how you end up with 700 lines of spec before your actual CI/CD config even starts.
 
-My recommendation to you is: be opinionated. Your users, or even your pipeline maintainers, don't need access to modify every single one of your configs. Decide what you believe should be overridable by pipelines and what you want your users to be able to modify. Your users probably shouldn't be overriding the image, so don't create a spec input for it.
+My recommendation: be opinionated. Your users, and even your pipeline maintainers, don't need to modify every single config. Decide what pipelines should be able to override and what users should be able to change. For example, your users probably shouldn't be overriding the image, so don't create a spec input for it.
 
 ```yaml
 # Too much
@@ -262,11 +262,11 @@ spec:
       default: "21"
 ```
 
-Ask yourself: Why would a user need to modify this? Why would a pipeline need to modify this? What happens if I don't let them modify this?
+Ask yourself: Why would a user need to modify this? Why would a pipeline need to? What happens if I don't let them?
 
-Most of the time, you are going to find that you don't actually need to surface something as a spec input.
+Most of the time, you'll find you don't actually need to expose it as a spec input.
 
-Spec inputs are read in at pipeline compile time, while variables are read in both at compile time and at run time. Variables should be used to dynamically pass information from one job to another, or within scripts. Spec inputs should be used for just about everything else.
+Spec inputs are read at pipeline compile time, while variables are read at both compile time and run time. Use variables to pass information dynamically from one job to another or within scripts. Use spec inputs for just about everything else.
 
 ```yaml
 # Passing data from one job to another with a dotenv artifact
@@ -286,12 +286,12 @@ deploy:
 
 ## Other Opinions
 
-Other small opinions include:
+A few smaller opinions:
 
-- I never set a workflow, and I never recommend that people set one: [GitLab docs: workflow](https://docs.gitlab.com/ci/yaml/workflow/). It's not a good idea when configuring multi-template solutions. Instead, create a standard for job rules across your components so users never have to worry about configuring their own workflows.
-- Needs should be defaulted to empty so your job executes immediately. If a job doesn't have a dependency, it should run right away. Aim for a stageless pipeline, or as few stages as possible. Your jobs shouldn't be waiting for their stage to run. They should only be waiting for their dependencies.
-- If you have more than 20 inputs, you should consider reviewing them or doing a redesign.
-- If you are having to rewrite the same script in multiple templates, it should probably go in an image instead.
-- Testing is increasingly important in today's age of AI. Make sure your templates include automated testing.
+- I never set a `workflow`, and I never recommend that anyone else does ([GitLab docs: workflow](https://docs.gitlab.com/ci/yaml/workflow/)). It's a bad idea in multi-template setups. Instead, create a standard for job rules across your components so users never have to configure their own workflows.
+- Default `needs` to empty so jobs start right away. If a job has no dependencies, it should run immediately. Aim for a stageless pipeline, or as few stages as possible: jobs shouldn't wait on their stage, only on their dependencies.
+- If you have more than 20 inputs, consider reviewing them or redesigning the component.
+- If you're rewriting the same script in multiple templates, it probably belongs in an image instead.
+- Testing matters more than ever in the age of AI. Make sure your templates include automated tests.
 
-While this guide is heavily geared toward GitLab, I imagine most of these opinions translate over to other source code management tools. I will be learning GitHub Workflows and Actions this year, so keep an eye out for a similar post for GitHub in the near future.
+While this guide is heavily geared toward GitLab, I imagine most of these opinions carry over to other CI/CD platforms. I'm learning GitHub Actions this year, so keep an eye out for a similar post for GitHub soon.
